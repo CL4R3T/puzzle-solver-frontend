@@ -1,0 +1,130 @@
+.app {
+  min-height: 100vh;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.app-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.app-header h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--text-muted, #666);
+  font-size: 0.95rem;
+}
+
+.app-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.sudoku-grid {
+  display: flex;
+  flex-direction: column;
+  background: var(--grid-bg, #1a1a1a);
+  padding: 4px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.sudoku-row {
+  display: flex;
+}
+
+.sudoku-cell-wrap {
+  padding: 2px;
+}
+
+.sudoku-cell-wrap.border-right {
+  border-right: 2px solid var(--grid-line, #444);
+}
+
+.sudoku-cell-wrap.border-bottom {
+  border-bottom: 2px solid var(--grid-line, #444);
+}
+
+.sudoku-cell {
+  width: 2.25rem;
+  height: 2.25rem;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 500;
+  border: 1px solid var(--cell-border, #333);
+  border-radius: 2px;
+  background: var(--cell-bg, #262626);
+  color: var(--cell-text, #eee);
+  box-sizing: border-box;
+}
+
+.sudoku-cell:focus {
+  outline: none;
+  border-color: var(--focus-border, #0ea5e9);
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.25);
+}
+
+.sudoku-cell.read-only {
+  background: var(--cell-readonly-bg, #1e293b);
+  color: var(--cell-readonly-text, #94a3b8);
+}
+
+.sudoku-cell::placeholder {
+  color: var(--placeholder, #64748b);
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.actions button {
+  padding: 0.5rem 1.25rem;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  border: 1px solid var(--btn-border, #475569);
+  background: var(--btn-bg, #334155);
+  color: var(--btn-text, #f1f5f9);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.actions button:hover:not(:disabled) {
+  background: var(--btn-hover-bg, #475569);
+  border-color: var(--btn-hover-border, #64748b);
+}
+
+.actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.message {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  max-width: 28rem;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.message-success {
+  background: var(--msg-success-bg, #052e16);
+  color: var(--msg-success-text, #86efac);
+  border: 1px solid var(--msg-success-border, #166534);
+}
+
+.message-error {
+  background: var(--msg-error-bg, #450a0a);
+  color: var(--msg-error-text, #fca5a5);
+  border: 1px solid var(--msg-error-border, #991b1b);
+}
