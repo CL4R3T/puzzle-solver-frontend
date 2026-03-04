@@ -96,10 +96,10 @@ export default function App() {
   }, [])
 
   const handleClear = useCallback(() => {
-    setBoard(emptyBoard())
+    setBoard(emptyBoard(appliedSideLength))
     setMessage('')
     setMessageType('')
-  }, [])
+  }, [appliedSideLength])
 
   const handleValidate = useCallback(async () => {
     setMessage('')
