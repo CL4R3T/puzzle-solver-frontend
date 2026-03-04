@@ -4,11 +4,13 @@ const API_BASE = '/api/sudoku'
  * @param {number[][]} board 9x9 数独棋盘，0 表示空格
  * @returns {Promise<{ success: boolean, solution: number[][]|null, message: string }>}
  */
-export async function solveSudoku(board) {
+export async function solveSudoku(board, blockShape) {
+  const payload = { board }
+  if (blockShape) payload.block_shape = blockShape
   const res = await fetch(`${API_BASE}/solve`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ board }),
+    body: JSON.stringify(payload),
   })
   if (!res.ok) throw new Error(`请求失败: ${res.status}`)
   return res.json()
@@ -18,11 +20,13 @@ export async function solveSudoku(board) {
  * @param {number[][]} board 9x9 数独棋盘
  * @returns {Promise<{ valid: boolean, message: string }>}
  */
-export async function validateSudoku(board) {
+export async function validateSudoku(board, blockShape) {
+  const payload = { board }
+  if (blockShape) payload.block_shape = blockShape
   const res = await fetch(`${API_BASE}/validate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ board }),
+    body: JSON.stringify(payload),
   })
   if (!res.ok) throw new Error(`请求失败: ${res.status}`)
   return res.json()
