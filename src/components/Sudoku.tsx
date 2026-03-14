@@ -3,22 +3,29 @@ import { SudokuGrid, emptyBoard } from './SudokuGrid'
 import { solveSudoku, validateSudoku } from '../api/sudoku'
 import './Sudoku.css'
 
+type Board = number[][]
+interface BlockShape {
+  rows: number
+  cols: number
+}
+type MessageType = 'success' | 'error' | ''
+
 export default function Sudoku() {
-  const [board, setBoard] = useState(emptyBoard(9))
-  const [appliedSideLength, setAppliedSideLength] = useState(9)
-  const [appliedShape, setAppliedShape] = useState({ rows: 3, cols: 3 })
-  const [message, setMessage] = useState('')
-  const [messageType, setMessageType] = useState('') // 'success' | 'error' | ''
-  const [loading, setLoading] = useState(false)
+  const [board, setBoard] = useState<Board>(emptyBoard(9))
+  const [appliedSideLength, setAppliedSideLength] = useState<number>(9)
+  const [appliedShape, setAppliedShape] = useState<BlockShape>({ rows: 3, cols: 3 })
+  const [message, setMessage] = useState<string>('')
+  const [messageType, setMessageType] = useState<MessageType>('')
+  const [loading, setLoading] = useState<boolean>(false)
 
   // settings dialog state
-  const [showSettings, setShowSettings] = useState(false)
-  const [sideLength, setSideLength] = useState(9)
-  const [shapeOptions, setShapeOptions] = useState([])
-  const [selectedShape, setSelectedShape] = useState(null)
-  const [sideLengthError, setSideLengthError] = useState('')
+  const [showSettings, setShowSettings] = useState<boolean>(false)
+  const [sideLength, setSideLength] = useState<number>(9)
+  const [shapeOptions, setShapeOptions] = useState<BlockShape[]>([])
+  const [selectedShape, setSelectedShape] = useState<BlockShape | null>(null)
+  const [sideLengthError, setSideLengthError] = useState<string>('')
 
-  const isPrime = (n) => {
+  const isPrime = (n: number): boolean => {
     if (n < 2) return false
     for (let i = 2; i * i <= n; i++) {
       if (n % i === 0) return false
@@ -26,8 +33,8 @@ export default function Sudoku() {
     return true
   }
 
-  const computeShapes = (n) => {
-    const opts = []
+  const computeShapes = (n: number): BlockShape[] => {
+    const opts: BlockShape[] = []
     for (let i = 1; i <= n; i++) {
       if (n % i === 0) {
         const rows = i
@@ -39,7 +46,7 @@ export default function Sudoku() {
     return opts
   }
 
-  const applySettings = () => {
+  const applySettings = (): void => {
     if (sideLengthError || !selectedShape) return
     const size = sideLength
     if (size === appliedSideLength) {
@@ -54,10 +61,10 @@ export default function Sudoku() {
     setShowSettings(false)
   }
 
-  const handleSideLengthChange = (e) => {
+  const handleSideLengthChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const v = parseInt(e.target.value, 10)
     if (isNaN(v)) {
-      setSideLength(e.target.value)
+      setSideLength(e.target.value as any)
       setSideLengthError('')
       return
     }
@@ -87,13 +94,13 @@ export default function Sudoku() {
     setSelectedShape(opts[0] || null)
   }, [])
 
-  const handleClear = useCallback(() => {
+  const handleClear = useCallback((): void => {
     setBoard(emptyBoard(appliedSideLength))
     setMessage('')
     setMessageType('')
   }, [appliedSideLength])
 
-  const handleValidate = useCallback(async () => {
+  const handleValidate = useCallback(async (): Promise<void> => {
     setMessage('')
     setMessageType('')
     setLoading(true)
@@ -102,14 +109,14 @@ export default function Sudoku() {
       setMessage(data.message)
       setMessageType(data.valid ? 'success' : 'error')
     } catch (err) {
-      setMessage(err.message || '请求失败，请确认后端已启动 (http://127.0.0.1:8000)')
+      setMessage((err as Error).message || '请求失败，请确认后端已启动 (http://127.0.0.1:8000)')
       setMessageType('error')
     } finally {
       setLoading(false)
     }
   }, [board, appliedShape])
 
-  const handleSolve = useCallback(async () => {
+  const handleSolve = useCallback(async (): Promise<void> => {
     setMessage('')
     setMessageType('')
     setLoading(true)
@@ -121,7 +128,7 @@ export default function Sudoku() {
         setBoard(data.solution)
       }
     } catch (err) {
-      setMessage(err.message || '请求失败，请确认后端已启动 (http://127.0.0.1:8000)')
+      setMessage((err as Error).message || '请求失败，请确认后端已启动 (http://127.0.0.1:8000)')
       setMessageType('error')
     } finally {
       setLoading(false)
@@ -192,7 +199,7 @@ export default function Sudoku() {
                 <select
                   id="shape-select"
                   value={selectedShape ? `${selectedShape.rows}x${selectedShape.cols}` : ''}
-                  onChange={(e) => {
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                     const [r, c] = e.target.value.split('x').map(Number)
                     setSelectedShape({ rows: r, cols: c })
                   }}

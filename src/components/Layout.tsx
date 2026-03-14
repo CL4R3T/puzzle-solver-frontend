@@ -1,12 +1,24 @@
 import { useState } from 'react'
 import './Layout.css'
 
-const puzzleTypes = [
+interface PuzzleType {
+  id: string
+  name: string
+  icon: string
+}
+
+const puzzleTypes: PuzzleType[] = [
   { id: 'home', name: '首页', icon: '⌂' },
   { id: 'sudoku', name: '数独求解器', icon: '⊞' },
 ]
 
-export default function Layout({ children, activePuzzle, onNavigate }) {
+interface LayoutProps {
+  children: React.ReactNode
+  activePuzzle: string
+  onNavigate: (id: string) => void
+}
+
+export default function Layout({ children, activePuzzle, onNavigate }: LayoutProps) {
   return (
     <div className="layout">
       <aside className="sidebar">
@@ -34,7 +46,7 @@ export default function Layout({ children, activePuzzle, onNavigate }) {
 }
 
 export function usePuzzleNavigation() {
-  const [activePuzzle, setActivePuzzle] = useState('home')
-  const navigate = (id) => setActivePuzzle(id)
+  const [activePuzzle, setActivePuzzle] = useState<string>('home')
+  const navigate = (id: string) => setActivePuzzle(id)
   return { activePuzzle, navigate }
 }

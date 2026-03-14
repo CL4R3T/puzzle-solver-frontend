@@ -1,10 +1,19 @@
 import { useCallback } from 'react'
 
-// create an empty board of given size (default 9)
-const emptyBoard = (size = 9) => Array(size).fill(null).map(() => Array(size).fill(0))
+type Board = number[][]
 
-function Cell({ value, onChange, readOnly, maxValue }) {
-  const handleChange = (e) => {
+// create an empty board of given size (default 9)
+const emptyBoard = (size = 9): Board => Array(size).fill(null).map(() => Array(size).fill(0))
+
+interface CellProps {
+  value: number
+  onChange: (value: number) => void
+  readOnly: boolean
+  maxValue: number
+}
+
+function Cell({ value, onChange, readOnly, maxValue }: CellProps) {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value
     if (v === '') {
       onChange(0)
@@ -29,9 +38,17 @@ function Cell({ value, onChange, readOnly, maxValue }) {
   )
 }
 
-export function SudokuGrid({ board, onChange, readOnly = false, blockRows = 3, blockCols = 3 }) {
+interface SudokuGridProps {
+  board: Board
+  onChange: (board: Board) => void
+  readOnly?: boolean
+  blockRows?: number
+  blockCols?: number
+}
+
+export function SudokuGrid({ board, onChange, readOnly = false, blockRows = 3, blockCols = 3 }: SudokuGridProps) {
   const handleCellChange = useCallback(
-    (row, col, value) => {
+    (row: number, col: number, value: number) => {
       const next = board.map((r, i) =>
         i === row ? r.map((v, j) => (j === col ? value : v)) : r
       )
