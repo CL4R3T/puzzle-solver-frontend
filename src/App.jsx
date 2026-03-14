@@ -1,7 +1,7 @@
 import Layout, { usePuzzleNavigation } from './components/Layout'
 import Home from './components/Home'
 import Sudoku from './components/Sudoku'
-import './App.css'
+import './styles/App.css'
 
 export default function App() {
   const { activePuzzle, navigate } = usePuzzleNavigation()

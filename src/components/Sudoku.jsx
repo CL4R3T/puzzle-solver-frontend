@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { SudokuGrid, emptyBoard } from './SudokuGrid'
 import { solveSudoku, validateSudoku } from '../api/sudoku'
+import './Sudoku.css'
 
 export default function Sudoku() {
   const [board, setBoard] = useState(emptyBoard(9))
