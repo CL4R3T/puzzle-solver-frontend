@@ -243,7 +243,8 @@
   opacity: 0.25;
 }
 
-.sudoku-grid.selecting .sudoku-cell-wrap {
+.sudoku-grid.selecting,
+.sudoku-grid.selecting * {
   cursor: crosshair;
   user-select: none;
   -webkit-user-select: none;
