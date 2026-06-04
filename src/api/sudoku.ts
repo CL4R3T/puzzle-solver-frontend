@@ -21,6 +21,7 @@ export interface SolveParams {
   boxShape?: BoxShape
   diagonals?: boolean
   cages?: { cells: [number, number][]; sum: number }[]
+  thermos?: [number, number][][]
 }
 
 function buildParams(params: SolveParams): Record<string, unknown> {
@@ -28,6 +29,7 @@ function buildParams(params: SolveParams): Record<string, unknown> {
   if (params.boxShape) p.box_shape = params.boxShape
   if (params.diagonals) p.diagonals = true
   if (params.cages && params.cages.length > 0) p.cages = params.cages
+  if (params.thermos && params.thermos.length > 0) p.thermos = params.thermos
   return p
 }
 

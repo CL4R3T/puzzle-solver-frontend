@@ -258,6 +258,10 @@ export default function Sudoku() {
       .filter(c => c.constraintType === 'cages' && c.cells.length > 0)
       .map(c => ({ cells: c.cells, sum: c.params.sum as number }))
     if (cages.length > 0) p.cages = cages
+    const thermos = constraints
+      .filter(c => c.constraintType === 'thermometer' && c.cells.length >= 2)
+      .map(c => c.cells)
+    if (thermos.length > 0) p.thermos = thermos
     return p
   }, [appliedShape, diagonalsEnabled, constraints])
 
