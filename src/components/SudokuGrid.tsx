@@ -47,6 +47,7 @@ export function SudokuGrid({
 }: SudokuGridProps) {
   const gridRef = useRef<HTMLDivElement>(null)
   const [cellCenters, setCellCenters] = useState<Map<string, { cx: number; cy: number }>>(new Map())
+  const pathThresholdRef = useRef(12)
   const gridReadOnly = readOnly || selectionMode !== 'none'
 
   const handleCellChange = useCallback(
@@ -85,6 +86,16 @@ export function SudokuGrid({
     if (gridRef.current) obs.observe(gridRef.current)
     return () => obs.disconnect()
   }, [board.length, blockRows, blockCols, recalcCenters])
+
+  // derive path threshold from measured cell spacing
+  useLayoutEffect(() => {
+    if (cellCenters.size < 2) return
+    const c00 = cellCenters.get('0,0')
+    const c01 = cellCenters.get('0,1')
+    if (c00 && c01) {
+      pathThresholdRef.current = (c01.cx - c00.cx) * 0.60
+    }
+  }, [cellCenters])
 
   // partition constraints into region (fill) and path (line) types
   const { overlays, pathLines } = useMemo(() => {
@@ -173,6 +184,23 @@ export function SudokuGrid({
 
   const isSelecting = selectionMode !== 'none'
 
+  // shared distance check for mouseenter / mousemove in path mode
+  const tryPropagatePath = useCallback((r: number, c: number, e: React.MouseEvent) => {
+    if (selectionMode !== 'path') {
+      onCellMouseEnter?.(r, c)
+      return
+    }
+    const gridRect = gridRef.current?.getBoundingClientRect()
+    const center = cellCenters.get(`${r},${c}`)
+    if (gridRect && center) {
+      const mx = e.clientX - gridRect.left
+      const my = e.clientY - gridRect.top
+      const dist = Math.sqrt((mx - center.cx) ** 2 + (my - center.cy) ** 2)
+      if (dist > pathThresholdRef.current) return
+    }
+    onCellMouseEnter?.(r, c)
+  }, [selectionMode, cellCenters, onCellMouseEnter])
+
   return (
     <div
       ref={gridRef}
@@ -207,7 +235,8 @@ export function SudokuGrid({
                   maxValue={board.length}
                   overlay={overlay}
                   onMouseDown={() => onCellMouseDown?.(i, j)}
-                  onMouseEnter={() => onCellMouseEnter?.(i, j)}
+                  onMouseEnter={(e) => tryPropagatePath(i, j, e)}
+                  onMouseMove={(e) => tryPropagatePath(i, j, e)}
                 />
               </div>
             )
@@ -249,6 +278,7 @@ export function SudokuGrid({
           })}
         </svg>
       )}
+
     </div>
   )
 }

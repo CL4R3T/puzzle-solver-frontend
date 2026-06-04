@@ -17,7 +17,8 @@ interface SudokuCellProps {
   maxValue: number
   overlay: CellOverlay
   onMouseDown: () => void
-  onMouseEnter: () => void
+  onMouseEnter: (e: React.MouseEvent) => void
+  onMouseMove: (e: React.MouseEvent) => void
 }
 
 export function SudokuCell({
@@ -28,6 +29,7 @@ export function SudokuCell({
   overlay,
   onMouseDown,
   onMouseEnter,
+  onMouseMove,
 }: SudokuCellProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value
@@ -43,16 +45,16 @@ export function SudokuCell({
   const classList = ['sudoku-cell']
   if (readOnly) classList.push('read-only')
 
-  const wrapClassList = ['sudoku-cell-wrap']
-  if (overlay.isPreview && !overlay.isPathCell) wrapClassList.push('preview')
-  if (overlay.isSelected) wrapClassList.push('constraint-selected')
+  const innerClassList = ['sudoku-cell-inner']
+  if (overlay.isPreview && !overlay.isPathCell) innerClassList.push('preview')
+  if (overlay.isSelected) innerClassList.push('constraint-selected')
 
   const showFill = overlay.color && !overlay.isPreview && !overlay.isPathCell
   const showRegionPreview = overlay.isPreview && !overlay.isPathCell
 
   return (
     <div
-      className={wrapClassList.join(' ')}
+      className={innerClassList.join(' ')}
       style={
         showFill
           ? ({ '--constraint-color': overlay.color } as React.CSSProperties)
@@ -60,6 +62,7 @@ export function SudokuCell({
       }
       onMouseDown={onMouseDown}
       onMouseEnter={onMouseEnter}
+      onMouseMove={onMouseMove}
     >
       {showFill && <div className="cell-overlay" />}
       {showRegionPreview && <div className="cell-preview" />}
