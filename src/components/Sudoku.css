@@ -256,6 +256,10 @@
   -webkit-user-select: none;
 }
 
+.sudoku-grid.selecting .sudoku-cell.read-only {
+  background: transparent;
+}
+
 .path-index {
   position: absolute;
   top: 1px;
