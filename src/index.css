@@ -7,7 +7,8 @@
 :root {
   --text: #e2e8f0;
   --text-muted: #94a3b8;
-  --bg: #0f172a;
+  --bg: #ffffff;
+  --background-color: #ffffff;
   --grid-bg: #1e293b;
   --grid-line: #5a6a81;
   --cell-bg: #334155;
@@ -41,4 +42,22 @@ body {
 
 #root {
   min-height: 100vh;
+}
+
+.app {
+  min-height: 100vh;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.app-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #000;
+}
+
+.app-header h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 600;
 }

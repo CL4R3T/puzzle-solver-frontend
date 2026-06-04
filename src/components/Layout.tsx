@@ -23,7 +23,7 @@ export default function Layout({ children, activePuzzle, onNavigate }: LayoutPro
     <div className="layout">
       <aside className="sidebar">
         <div className="sidebar-header">
-          <h2>谜题求解器</h2>
+          <h2>纸笔求解器</h2>
         </div>
         <nav className="sidebar-nav">
           {puzzleTypes.map(puzzle => (

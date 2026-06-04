@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>欢迎使用谜题求解器</h1>
+        <h1>CLRT 的纸笔求解器</h1>
       </header>
       <main className="app-main home-main">
         <p className="home-text">
