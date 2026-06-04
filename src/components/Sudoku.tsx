@@ -173,9 +173,15 @@ export default function Sudoku() {
     if (selectionMode === 'path') {
       setCurrentCells(prev => {
         if (prev.length === 0) return prev
+        // if already in path: undo if it's the second-to-last cell, otherwise ignore
+        if (hasCell(prev, r, c)) {
+          if (prev.length >= 2 && r === prev[prev.length - 2][0] && c === prev[prev.length - 2][1]) {
+            return prev.slice(0, -1)
+          }
+          return prev
+        }
         const last = prev[prev.length - 1]
         if (!isAdjacent8(r, c, last)) return prev
-        if (hasCell(prev, r, c)) return prev
         return [...prev, [r, c]]
       })
     }
@@ -184,6 +190,10 @@ export default function Sudoku() {
   const handleCellMouseUp = useCallback(() => {
     if (selectionMode === 'none' || currentCells.length === 0) return
 
+    if (selectionMode === 'path' && currentCells.length < 2) {
+      setCurrentCells([])
+      return
+    }
     if (selectionMode === 'region' && !isConnected4(currentCells)) {
       setMessage('选区不连通，请重试')
       setMessageType('error')
@@ -205,12 +215,6 @@ export default function Sudoku() {
     setSelectionMode('none')
     setShowSidebar(true)
   }, [selectionMode, currentCells, constraints])
-
-  // ---- path undo ----
-
-  const handlePathUndo = useCallback(() => {
-    setCurrentCells(prev => prev.slice(0, -1))
-  }, [])
 
   // ---- constraint operations ----
 
@@ -326,15 +330,10 @@ export default function Sudoku() {
           <div className="constraint-toolbar">
             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted, #94a3b8)' }}>
               {selectionMode === 'region'
-                ? '拖拽选择4-连通区域'
-                : '依次点击格子构建路径'}
+                ? '按住鼠标左键选择区域，松手后创建选区。'
+                : '按住鼠标左键构建路径，松手后创建选区。'}
               {' · '}
               已选 {currentCells.length} 格
-              {selectionMode === 'path' && currentCells.length > 0 && (
-                <button type="button" onClick={handlePathUndo} style={{ marginLeft: '0.5rem' }}>
-                  撤销一步
-                </button>
-              )}
             </span>
           </div>
         )}

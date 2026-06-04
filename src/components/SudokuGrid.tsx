@@ -95,7 +95,7 @@ export function SudokuGrid({
     const c00 = cellCenters.get('0,0')
     const c01 = cellCenters.get('0,1')
     if (c00 && c01) {
-      pathThresholdRef.current = (c01.cx - c00.cx) * 0.60
+      pathThresholdRef.current = (c01.cx - c00.cx) * 0.50
     }
   }, [cellCenters])
 
