@@ -61,9 +61,15 @@
   font-weight: 500;
   border: none;
   border-radius: 0;
-  background: var(--cell-bg);
+  background: transparent;
   color: var(--cell-text);
   box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+}
+
+.sudoku-cell.solved {
+  color: var(--cell-readonly-text);
 }
 
 .sudoku-cell:focus {
@@ -73,7 +79,6 @@
 
 .sudoku-cell.read-only {
   background: var(--cell-readonly-bg);
-  color: var(--cell-readonly-text);
 }
 
 .sudoku-cell::placeholder {
@@ -232,6 +237,7 @@
 
 .sudoku-cell-inner {
   position: relative;
+  background: var(--cell-bg);
 }
 
 .sudoku-cell-inner.constraint-selected .cell-overlay {

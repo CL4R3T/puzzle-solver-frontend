@@ -16,6 +16,7 @@ interface SudokuCellProps {
   readOnly: boolean
   maxValue: number
   overlay: CellOverlay
+  isSolved: boolean
   onMouseDown: () => void
   onMouseEnter: (e: React.MouseEvent) => void
   onMouseMove: (e: React.MouseEvent) => void
@@ -27,6 +28,7 @@ export function SudokuCell({
   readOnly,
   maxValue,
   overlay,
+  isSolved,
   onMouseDown,
   onMouseEnter,
   onMouseMove,
@@ -44,6 +46,7 @@ export function SudokuCell({
 
   const classList = ['sudoku-cell']
   if (readOnly) classList.push('read-only')
+  if (isSolved) classList.push('solved')
 
   const innerClassList = ['sudoku-cell-inner']
   // preview class: only for region preview (path preview uses SVG)

@@ -27,6 +27,7 @@ interface SudokuGridProps {
   selectionMode?: SelectionMode
   currentCells?: [number, number][]
   previewColor?: string
+  solvedMask?: boolean[][] | null
   onCellMouseDown?: (r: number, c: number) => void
   onCellMouseEnter?: (r: number, c: number) => void
   onCellMouseUp?: () => void
@@ -43,6 +44,7 @@ export function SudokuGrid({
   selectionMode = 'none',
   currentCells = [],
   previewColor = '#94a3b8',
+  solvedMask = null,
   onCellMouseDown,
   onCellMouseEnter,
   onCellMouseUp,
@@ -253,6 +255,7 @@ export function SudokuGrid({
                   readOnly={gridReadOnly}
                   maxValue={board.length}
                   overlay={overlay}
+                  isSolved={solvedMask?.[i]?.[j] ?? false}
                   onMouseDown={() => onCellMouseDown?.(i, j)}
                   onMouseEnter={(e) => tryPropagatePath(i, j, e)}
                   onMouseMove={(e) => tryPropagatePath(i, j, e)}

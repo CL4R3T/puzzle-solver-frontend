@@ -70,6 +70,7 @@ export default function Sudoku() {
   const [selectionMode, setSelectionMode] = useState<SelectionMode>('none')
   const [currentCells, setCurrentCells] = useState<[number, number][]>([])
   const [showSidebar, setShowSidebar] = useState<boolean>(false)
+  const [solutionBoard, setSolutionBoard] = useState<Board | null>(null)
 
   const diagonalsEnabled = constraints.some(c => c.constraintType === 'diagonals')
 
@@ -112,6 +113,7 @@ export default function Sudoku() {
     setActiveConstraintId(null)
     setCurrentCells([])
     setSelectionMode('none')
+    setSolutionBoard(null)
     setShowSettings(false)
   }
 
@@ -267,6 +269,7 @@ export default function Sudoku() {
     setActiveConstraintId(null)
     setCurrentCells([])
     setSelectionMode('none')
+    setSolutionBoard(null)
     setMessage('')
     setMessageType('')
   }, [appliedSideLength])
@@ -296,7 +299,7 @@ export default function Sudoku() {
       setMessage(data.message)
       setMessageType(data.success ? 'success' : 'error')
       if (data.success && data.solution) {
-        setBoard(data.solution)
+        setSolutionBoard(data.solution)
       }
     } catch (err) {
       setMessage((err as Error).message || '请求失败，请确认后端已启动 (http://127.0.0.1:8000)')
@@ -419,6 +422,29 @@ export default function Sudoku() {
                 </button>
                 <button type="button" onClick={applySettings} disabled={!!sideLengthError || !selectedShape}>
                   确定
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {solutionBoard && (
+          <div className="modal-backdrop" onClick={() => setSolutionBoard(null)}>
+            <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '36rem' }}>
+              <h2>求解结果</h2>
+              <div style={{ display: 'flex', justifyContent: 'center', margin: '1rem 0' }}>
+                <SudokuGrid
+                  board={solutionBoard}
+                  onChange={() => {}}
+                  readOnly={true}
+                  blockRows={appliedShape.rows}
+                  blockCols={appliedShape.cols}
+                  solvedMask={board.map(row => row.map(v => v === 0))}
+                />
+              </div>
+              <div className="modal-actions">
+                <button type="button" onClick={() => setSolutionBoard(null)}>
+                  关闭
                 </button>
               </div>
             </div>
