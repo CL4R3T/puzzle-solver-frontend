@@ -115,57 +115,63 @@ export function SudokuGrid({
     )
     const lines: PathLine[] = []
 
-    // render inactive constraints first, then active one on top
-    const sorted = [...constraints].sort((a, b) => {
+    // separate region and path constraints so they don't overwrite each other
+    const regionConstraints = constraints.filter(c => getCategoryForType(c.constraintType) !== 'path')
+    const pathConstraints = constraints.filter(c => getCategoryForType(c.constraintType) === 'path')
+
+    // 1) region fills — active one on top
+    const sortedRegion = [...regionConstraints].sort((a, b) => {
       if (a.id === activeConstraintId) return 1
       if (b.id === activeConstraintId) return -1
       return 0
     })
-
-    for (const c of sorted) {
+    for (const c of sortedRegion) {
       const isActive = c.id === activeConstraintId
-      const category = getCategoryForType(c.constraintType)
-
-      if (category === 'path') {
-        lines.push({ cells: c.cells, color: c.color, isActive, isPreview: false })
-        for (let i = 0; i < c.cells.length; i++) {
-          const [r, cCol] = c.cells[i]
-          result[r][cCol] = {
-            color: c.color,
-            isSelected: isActive,
-            isPreview: false,
-            pathIndex: i,
-            isPathStart: i === 0,
-            isPathEnd: i === c.cells.length - 1,
-            isPathCell: true,
-          }
-        }
-      } else {
-        // region / toggle
-        for (let i = 0; i < c.cells.length; i++) {
-          const [r, cCol] = c.cells[i]
-          result[r][cCol] = {
-            color: c.color,
-            isSelected: isActive,
-            isPreview: false,
-            pathIndex: -1,
-            isPathStart: false,
-            isPathEnd: false,
-            isPathCell: false,
-          }
+      for (let i = 0; i < c.cells.length; i++) {
+        const [r, cCol] = c.cells[i]
+        const existing = result[r][cCol]
+        result[r][cCol] = {
+          ...existing,
+          color: c.color,
+          isSelected: existing.isSelected || isActive,
+          isPathCell: false,
         }
       }
     }
 
-    // currentCells preview
+    // 2) path markers — active one on top, preserve region fill
+    const sortedPath = [...pathConstraints].sort((a, b) => {
+      if (a.id === activeConstraintId) return 1
+      if (b.id === activeConstraintId) return -1
+      return 0
+    })
+    for (const c of sortedPath) {
+      const isActive = c.id === activeConstraintId
+      lines.push({ cells: c.cells, color: c.color, isActive, isPreview: false })
+      for (let i = 0; i < c.cells.length; i++) {
+        const [r, cCol] = c.cells[i]
+        const existing = result[r][cCol]
+        result[r][cCol] = {
+          ...existing,
+          isSelected: existing.isSelected || isActive,
+          pathIndex: i,
+          isPathStart: i === 0,
+          isPathEnd: i === c.cells.length - 1,
+          isPathCell: true,
+        }
+      }
+    }
+
+    // 3) currentCells preview
     if (currentCells.length > 0) {
       if (selectionMode === 'path') {
         lines.push({ cells: currentCells, color: previewColor, isActive: false, isPreview: true })
         for (let idx = 0; idx < currentCells.length; idx++) {
           const [r, c] = currentCells[idx]
+          const existing = result[r][c]
           result[r][c] = {
-            color: previewColor,
-            isSelected: false,
+            ...existing,
+            isSelected: existing.isSelected,
             isPreview: true,
             pathIndex: idx,
             isPathStart: idx === 0,
@@ -175,13 +181,12 @@ export function SudokuGrid({
         }
       } else {
         for (const [r, c] of currentCells) {
+          const existing = result[r][c]
           result[r][c] = {
+            ...existing,
             color: previewColor,
             isSelected: false,
             isPreview: true,
-            pathIndex: -1,
-            isPathStart: false,
-            isPathEnd: false,
             isPathCell: false,
           }
         }

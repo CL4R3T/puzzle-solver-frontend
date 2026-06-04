@@ -46,16 +46,19 @@ export function SudokuCell({
   if (readOnly) classList.push('read-only')
 
   const innerClassList = ['sudoku-cell-inner']
+  // preview class: only for region preview (path preview uses SVG)
   if (overlay.isPreview && !overlay.isPathCell) innerClassList.push('preview')
   if (overlay.isSelected) innerClassList.push('constraint-selected')
 
-  const regionOverlay = overlay.color && !overlay.isPathCell
+  // show fill for any cell with a color. path preview cells inherit region
+  // color via ...existing and keep it visible underneath the SVG line.
+  const showFill = overlay.color !== null
 
   return (
     <div
       className={innerClassList.join(' ')}
       style={
-        regionOverlay
+        showFill
           ? ({ '--constraint-color': overlay.color } as React.CSSProperties)
           : undefined
       }
@@ -63,7 +66,7 @@ export function SudokuCell({
       onMouseEnter={onMouseEnter}
       onMouseMove={onMouseMove}
     >
-      {regionOverlay && <div className="cell-overlay" />}
+      {showFill && <div className="cell-overlay" />}
       {overlay.pathIndex >= 0 && overlay.isSelected && (
         <span className="path-index">{overlay.pathIndex + 1}</span>
       )}
