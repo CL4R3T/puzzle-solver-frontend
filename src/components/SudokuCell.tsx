@@ -49,14 +49,13 @@ export function SudokuCell({
   if (overlay.isPreview && !overlay.isPathCell) innerClassList.push('preview')
   if (overlay.isSelected) innerClassList.push('constraint-selected')
 
-  const showFill = overlay.color && !overlay.isPreview && !overlay.isPathCell
-  const showRegionPreview = overlay.isPreview && !overlay.isPathCell
+  const regionOverlay = overlay.color && !overlay.isPathCell
 
   return (
     <div
       className={innerClassList.join(' ')}
       style={
-        showFill
+        regionOverlay
           ? ({ '--constraint-color': overlay.color } as React.CSSProperties)
           : undefined
       }
@@ -64,8 +63,7 @@ export function SudokuCell({
       onMouseEnter={onMouseEnter}
       onMouseMove={onMouseMove}
     >
-      {showFill && <div className="cell-overlay" />}
-      {showRegionPreview && <div className="cell-preview" />}
+      {regionOverlay && <div className="cell-overlay" />}
       {overlay.pathIndex >= 0 && overlay.isSelected && (
         <span className="path-index">{overlay.pathIndex + 1}</span>
       )}

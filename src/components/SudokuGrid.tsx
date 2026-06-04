@@ -26,6 +26,7 @@ interface SudokuGridProps {
   activeConstraintId?: string | null
   selectionMode?: SelectionMode
   currentCells?: [number, number][]
+  previewColor?: string
   onCellMouseDown?: (r: number, c: number) => void
   onCellMouseEnter?: (r: number, c: number) => void
   onCellMouseUp?: () => void
@@ -41,6 +42,7 @@ export function SudokuGrid({
   activeConstraintId = null,
   selectionMode = 'none',
   currentCells = [],
+  previewColor = '#94a3b8',
   onCellMouseDown,
   onCellMouseEnter,
   onCellMouseUp,
@@ -158,11 +160,11 @@ export function SudokuGrid({
     // currentCells preview
     if (currentCells.length > 0) {
       if (selectionMode === 'path') {
-        lines.push({ cells: currentCells, color: '#f1f5f9', isActive: false, isPreview: true })
+        lines.push({ cells: currentCells, color: previewColor, isActive: false, isPreview: true })
         for (let idx = 0; idx < currentCells.length; idx++) {
           const [r, c] = currentCells[idx]
           result[r][c] = {
-            color: null,
+            color: previewColor,
             isSelected: false,
             isPreview: true,
             pathIndex: idx,
@@ -174,7 +176,7 @@ export function SudokuGrid({
       } else {
         for (const [r, c] of currentCells) {
           result[r][c] = {
-            color: null,
+            color: previewColor,
             isSelected: false,
             isPreview: true,
             pathIndex: -1,
@@ -282,8 +284,8 @@ export function SudokuGrid({
                     cx={p.cx}
                     cy={p.cy}
                     r={i === 0 ? 5 : i === points.length - 1 ? 4 : 3}
-                    fill={line.isPreview ? '#cbd5e1' : line.color}
-                    stroke={line.isActive ? '#fff' : line.isPreview ? '#475569' : 'rgba(255,255,255,0.5)'}
+                    fill={line.color}
+                    stroke={line.isActive ? '#fff' : 'rgba(255,255,255,0.5)'}
                     strokeWidth={1.5}
                   />
                 ))}

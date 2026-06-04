@@ -6,7 +6,6 @@ import { solveSudoku, validateSudoku, type SolveParams } from '../api/sudoku'
 import type { ConstraintInstance } from '../constraints/definitions'
 import {
   getNextUnusedColor,
-  getCategoryForType,
   getDefaultTypeForCategory,
 } from '../constraints/definitions'
 import './Sudoku.css'
@@ -224,15 +223,6 @@ export default function Sudoku() {
     if (activeConstraintId === id) setActiveConstraintId(null)
   }, [activeConstraintId])
 
-  const redrawConstraint = useCallback((id: string) => {
-    const target = constraints.find(c => c.id === id)
-    if (!target) return
-    setActiveConstraintId(null)
-    setConstraints(prev => prev.filter(c => c.id !== id))
-    setCurrentCells(target.cells)
-    setSelectionMode(getCategoryForType(target.constraintType) === 'path' ? 'path' : 'region')
-  }, [constraints])
-
   const toggleDiagonals = useCallback(() => {
     setConstraints(prev => {
       const existing = prev.find(c => c.constraintType === 'diagonals')
@@ -359,6 +349,7 @@ export default function Sudoku() {
           activeConstraintId={activeConstraintId}
           selectionMode={selectionMode}
           currentCells={currentCells}
+          previewColor={getNextUnusedColor(constraints)}
           onCellMouseDown={handleCellMouseDown}
           onCellMouseEnter={handleCellMouseEnter}
           onCellMouseUp={handleCellMouseUp}
@@ -442,7 +433,6 @@ export default function Sudoku() {
             onSelect={selectConstraint}
             onUpdate={updateConstraint}
             onDelete={deleteConstraint}
-            onRedraw={redrawConstraint}
             onClose={() => setShowSidebar(false)}
           />
         )}

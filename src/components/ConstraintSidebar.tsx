@@ -7,7 +7,6 @@ interface ConstraintSidebarProps {
   onSelect: (id: string | null) => void
   onUpdate: (id: string, patch: Partial<ConstraintInstance>) => void
   onDelete: (id: string) => void
-  onRedraw: (id: string) => void
   onClose: () => void
 }
 
@@ -17,7 +16,6 @@ export function ConstraintSidebar({
   onSelect,
   onUpdate,
   onDelete,
-  onRedraw,
   onClose,
 }: ConstraintSidebarProps) {
   return (
@@ -73,7 +71,6 @@ export function ConstraintSidebar({
           instance={constraints.find(c => c.id === activeConstraintId)!}
           onChange={(patch) => onUpdate(activeConstraintId, patch)}
           onDelete={() => onDelete(activeConstraintId)}
-          onRedraw={() => onRedraw(activeConstraintId)}
         />
       )}
     </div>
@@ -84,10 +81,9 @@ interface ConstraintEditorProps {
   instance: ConstraintInstance
   onChange: (patch: Partial<ConstraintInstance>) => void
   onDelete: () => void
-  onRedraw: () => void
 }
 
-function ConstraintEditor({ instance, onChange, onDelete, onRedraw }: ConstraintEditorProps) {
+function ConstraintEditor({ instance, onChange, onDelete }: ConstraintEditorProps) {
   const def = CONSTRAINT_DEFS.find(d => d.type === instance.constraintType)
   if (!def) return null
 
@@ -166,7 +162,6 @@ function ConstraintEditor({ instance, onChange, onDelete, onRedraw }: Constraint
       ))}
 
       <div className="editor-actions">
-        <button type="button" onClick={onRedraw}>重画选区</button>
         <button type="button" className="danger" onClick={onDelete}>删除</button>
       </div>
     </div>
