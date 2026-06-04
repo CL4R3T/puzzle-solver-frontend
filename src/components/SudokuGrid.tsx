@@ -238,16 +238,12 @@ export function SudokuGrid({
               color: null, isSelected: false, isPreview: false,
               pathIndex: -1, isPathStart: false, isPathEnd: false, isPathCell: false,
             }
-            const hasRegionFill = overlay.color && !overlay.isPathCell && !overlay.isPreview
             return (
               <div
                 key={j}
                 data-row={i}
                 data-col={j}
                 className={`sudoku-cell-wrap ${((i + 1) % blockRows === 0 && i < board.length - 1) ? 'border-bottom' : ''} ${((j + 1) % blockCols === 0 && j < board.length - 1) ? 'border-right' : ''}`}
-                style={hasRegionFill
-                  ? ({ '--constraint-color': overlay.color } as React.CSSProperties)
-                  : undefined}
               >
                 <SudokuCell
                   value={val}
