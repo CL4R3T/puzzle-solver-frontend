@@ -49,6 +49,7 @@ export function SudokuGrid({
 }: SudokuGridProps) {
   const gridRef = useRef<HTMLDivElement>(null)
   const [cellCenters, setCellCenters] = useState<Map<string, { cx: number; cy: number }>>(new Map())
+  const gridSizeRef = useRef({ w: 0, h: 0 })
   const pathThresholdRef = useRef(12)
   const gridReadOnly = readOnly || selectionMode !== 'none'
 
@@ -67,6 +68,7 @@ export function SudokuGrid({
     const grid = gridRef.current
     if (!grid) return
     const gridRect = grid.getBoundingClientRect()
+    gridSizeRef.current = { w: grid.clientWidth, h: grid.clientHeight }
     const wraps = grid.querySelectorAll('.sudoku-cell-wrap')
     const map = new Map<string, { cx: number; cy: number }>()
     wraps.forEach((el) => {
@@ -75,8 +77,8 @@ export function SudokuGrid({
       if (r === undefined || c === undefined) return
       const rect = el.getBoundingClientRect()
       map.set(`${r},${c}`, {
-        cx: rect.left - gridRect.left + rect.width / 2,
-        cy: rect.top - gridRect.top + rect.height / 2,
+        cx: rect.left - gridRect.left + rect.width / 2 - grid.clientLeft,
+        cy: rect.top - gridRect.top + rect.height / 2 - grid.clientTop,
       })
     })
     setCellCenters(map)
@@ -261,40 +263,71 @@ export function SudokuGrid({
         </div>
       ))}
 
-      {pathLines.length > 0 && (
-        <svg className="path-overlay-svg">
-          {pathLines.map((line, li) => {
-            const points = line.cells
-              .map(([r, c]) => cellCenters.get(`${r},${c}`))
-              .filter(Boolean) as { cx: number; cy: number }[]
-            if (points.length < 2) return null
-            return (
-              <g key={li}>
-                <polyline
-                  points={points.map(p => `${p.cx},${p.cy}`).join(' ')}
-                  fill="none"
-                  stroke={line.color}
-                  strokeWidth={line.isActive ? 4 : 3}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  opacity={line.isPreview ? 0.7 : 0.85}
+      <svg className="path-overlay-svg">
+        {/* path lines */}
+        {pathLines.map((line, li) => {
+          const points = line.cells
+            .map(([r, c]) => cellCenters.get(`${r},${c}`))
+            .filter(Boolean) as { cx: number; cy: number }[]
+          if (points.length < 2) return null
+          return (
+            <g key={li}>
+              <polyline
+                points={points.map(p => `${p.cx},${p.cy}`).join(' ')}
+                fill="none"
+                stroke={line.color}
+                strokeWidth={line.isActive ? 4 : 3}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity={line.isPreview ? 0.7 : 0.85}
+              />
+              {points.map((p, i) => (
+                <circle
+                  key={i}
+                  cx={p.cx}
+                  cy={p.cy}
+                  r={i === 0 ? 5 : i === points.length - 1 ? 4 : 3}
+                  fill={line.color}
+                  stroke={line.isActive ? '#fff' : 'rgba(255,255,255,0.5)'}
+                  strokeWidth={1.5}
                 />
-                {points.map((p, i) => (
-                  <circle
-                    key={i}
-                    cx={p.cx}
-                    cy={p.cy}
-                    r={i === 0 ? 5 : i === points.length - 1 ? 4 : 3}
-                    fill={line.color}
-                    stroke={line.isActive ? '#fff' : 'rgba(255,255,255,0.5)'}
-                    strokeWidth={1.5}
-                  />
-                ))}
-              </g>
-            )
-          })}
-        </svg>
-      )}
+              ))}
+            </g>
+          )
+        })}
+
+        {/* diagonal lines */}
+        {(() => {
+          const d = constraints.find(c => c.constraintType === 'diagonals')
+          if (!d) return null
+          const { w, h } = gridSizeRef.current
+          const n = board.length
+          const ptsMain = [
+            { cx: 0, cy: 0 },
+            ...Array.from({ length: n }, (_, i) => cellCenters.get(`${i},${i}`)).filter(Boolean) as { cx: number; cy: number }[],
+            { cx: w, cy: h },
+          ]
+          const ptsAnti = [
+            { cx: w, cy: 0 },
+            ...Array.from({ length: n }, (_, i) => cellCenters.get(`${i},${n - 1 - i}`)).filter(Boolean) as { cx: number; cy: number }[],
+            { cx: 0, cy: h },
+          ]
+          return (
+            <g>
+              <polyline
+                points={ptsMain.map(p => `${p.cx},${p.cy}`).join(' ')}
+                fill="none" stroke={d.color} strokeWidth={1.5}
+                strokeLinecap="round" opacity={0.6}
+              />
+              <polyline
+                points={ptsAnti.map(p => `${p.cx},${p.cy}`).join(' ')}
+                fill="none" stroke={d.color} strokeWidth={1.5}
+                strokeLinecap="round" opacity={0.6}
+              />
+            </g>
+          )
+        })()}
+      </svg>
 
     </div>
   )
