@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
-import { SudokuGrid, emptyBoard } from './SudokuGrid'
-import { solveSudoku, validateSudoku } from '../api/sudoku'
+import { SudokuGrid, emptyBoard, type SelectionMode } from './SudokuGrid'
+import { ConstraintToolbar } from './ConstraintToolbar'
+import { ConstraintSidebar } from './ConstraintSidebar'
+import { solveSudoku, validateSudoku, type SolveParams } from '../api/sudoku'
+import type { ConstraintInstance } from '../constraints/definitions'
+import {
+  getNextUnusedColor,
+  getCategoryForType,
+  getDefaultTypeForCategory,
+} from '../constraints/definitions'
 import './Sudoku.css'
 
 type Board = number[][]
@@ -9,6 +17,38 @@ interface BlockShape {
   cols: number
 }
 type MessageType = 'success' | 'error' | ''
+
+function isAdjacent4(r: number, c: number, cells: [number, number][]): boolean {
+  return cells.some(([cr, cc]) => Math.abs(r - cr) + Math.abs(c - cc) === 1)
+}
+
+function isAdjacent8(r: number, c: number, target: [number, number]): boolean {
+  return Math.max(Math.abs(r - target[0]), Math.abs(c - target[1])) === 1
+}
+
+function hasCell(cells: [number, number][], r: number, c: number): boolean {
+  return cells.some(([cr, cc]) => cr === r && cc === c)
+}
+
+function isConnected4(cells: [number, number][]): boolean {
+  if (cells.length <= 1) return true
+  const set = new Set(cells.map(([r, c]) => `${r},${c}`))
+  const visited = new Set<string>()
+  const queue: [number, number][] = [cells[0]]
+  visited.add(`${cells[0][0]},${cells[0][1]}`)
+  while (queue.length > 0) {
+    const [r, c] = queue.shift()!
+    for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+      const nr = r + dr, nc = c + dc
+      const key = `${nr},${nc}`
+      if (set.has(key) && !visited.has(key)) {
+        visited.add(key)
+        queue.push([nr, nc])
+      }
+    }
+  }
+  return visited.size === cells.length
+}
 
 export default function Sudoku() {
   const [board, setBoard] = useState<Board>(emptyBoard(9))
@@ -24,6 +64,17 @@ export default function Sudoku() {
   const [shapeOptions, setShapeOptions] = useState<BlockShape[]>([])
   const [selectedShape, setSelectedShape] = useState<BlockShape | null>(null)
   const [sideLengthError, setSideLengthError] = useState<string>('')
+
+  // constraint state
+  const [constraints, setConstraints] = useState<ConstraintInstance[]>([])
+  const [activeConstraintId, setActiveConstraintId] = useState<string | null>(null)
+  const [selectionMode, setSelectionMode] = useState<SelectionMode>('none')
+  const [currentCells, setCurrentCells] = useState<[number, number][]>([])
+  const [showSidebar, setShowSidebar] = useState<boolean>(false)
+
+  const diagonalsEnabled = constraints.some(c => c.constraintType === 'diagonals')
+
+  // ---- settings helpers ----
 
   const isPrime = (n: number): boolean => {
     if (n < 2) return false
@@ -58,6 +109,10 @@ export default function Sudoku() {
     setBoard(Array(size).fill(null).map(() => Array(size).fill(0)))
     setAppliedSideLength(size)
     setAppliedShape(selectedShape)
+    setConstraints([])
+    setActiveConstraintId(null)
+    setCurrentCells([])
+    setSelectionMode('none')
     setShowSettings(false)
   }
 
@@ -94,8 +149,130 @@ export default function Sudoku() {
     setSelectedShape(opts[0] || null)
   }, [])
 
+  // ---- selection handlers ----
+
+  const handleCellMouseDown = useCallback((r: number, c: number) => {
+    if (selectionMode === 'none') return
+    if (selectionMode === 'region') {
+      setCurrentCells([[r, c]])
+    }
+    if (selectionMode === 'path') {
+      setCurrentCells(prev => prev.length === 0 ? [[r, c]] : prev)
+    }
+  }, [selectionMode])
+
+  const handleCellMouseEnter = useCallback((r: number, c: number) => {
+    if (selectionMode === 'none') return
+    if (selectionMode === 'region') {
+      setCurrentCells(prev => {
+        if (prev.length === 0) return prev
+        if (!isAdjacent4(r, c, prev)) return prev
+        if (hasCell(prev, r, c)) return prev
+        return [...prev, [r, c]]
+      })
+    }
+    if (selectionMode === 'path') {
+      setCurrentCells(prev => {
+        if (prev.length === 0) return prev
+        const last = prev[prev.length - 1]
+        if (!isAdjacent8(r, c, last)) return prev
+        if (hasCell(prev, r, c)) return prev
+        return [...prev, [r, c]]
+      })
+    }
+  }, [selectionMode])
+
+  const handleCellMouseUp = useCallback(() => {
+    if (selectionMode === 'none' || currentCells.length === 0) return
+
+    if (selectionMode === 'region' && !isConnected4(currentCells)) {
+      setMessage('选区不连通，请重试')
+      setMessageType('error')
+      setCurrentCells([])
+      return
+    }
+
+    const defaultType = getDefaultTypeForCategory(selectionMode === 'path' ? 'path' : 'region')
+    const draft: ConstraintInstance = {
+      id: crypto.randomUUID(),
+      constraintType: defaultType,
+      cells: [...currentCells],
+      params: defaultType === 'cages' ? { sum: 0 } : {},
+      color: getNextUnusedColor(constraints),
+    }
+    setConstraints(prev => [...prev, draft])
+    setActiveConstraintId(draft.id)
+    setCurrentCells([])
+    setSelectionMode('none')
+    setShowSidebar(true)
+  }, [selectionMode, currentCells, constraints])
+
+  // ---- path undo ----
+
+  const handlePathUndo = useCallback(() => {
+    setCurrentCells(prev => prev.slice(0, -1))
+  }, [])
+
+  // ---- constraint operations ----
+
+  const updateConstraint = useCallback((id: string, patch: Partial<ConstraintInstance>) => {
+    setConstraints(prev => prev.map(c => c.id === id ? { ...c, ...patch } : c))
+  }, [])
+
+  const deleteConstraint = useCallback((id: string) => {
+    setConstraints(prev => prev.filter(c => c.id !== id))
+    if (activeConstraintId === id) setActiveConstraintId(null)
+  }, [activeConstraintId])
+
+  const redrawConstraint = useCallback((id: string) => {
+    const target = constraints.find(c => c.id === id)
+    if (!target) return
+    setActiveConstraintId(null)
+    setConstraints(prev => prev.filter(c => c.id !== id))
+    setCurrentCells(target.cells)
+    setSelectionMode(getCategoryForType(target.constraintType) === 'path' ? 'path' : 'region')
+  }, [constraints])
+
+  const toggleDiagonals = useCallback(() => {
+    setConstraints(prev => {
+      const existing = prev.find(c => c.constraintType === 'diagonals')
+      if (existing) return prev.filter(c => c.id !== existing.id)
+      return [...prev, {
+        id: crypto.randomUUID(),
+        constraintType: 'diagonals',
+        cells: [],
+        params: {},
+        color: '#60a5fa',
+      }]
+    })
+  }, [])
+
+  const selectConstraint = useCallback((id: string | null) => {
+    setActiveConstraintId(id)
+    setSelectionMode('none')
+    setCurrentCells([])
+  }, [])
+
+  // ---- API params builder ----
+
+  const buildSolveParams = useCallback((): SolveParams => {
+    const p: SolveParams = { boxShape: [appliedShape.rows, appliedShape.cols] }
+    if (diagonalsEnabled) p.diagonals = true
+    const cages = constraints
+      .filter(c => c.constraintType === 'cages' && c.cells.length > 0)
+      .map(c => ({ cells: c.cells, sum: c.params.sum as number }))
+    if (cages.length > 0) p.cages = cages
+    return p
+  }, [appliedShape, diagonalsEnabled, constraints])
+
+  // ---- clear / validate / solve ----
+
   const handleClear = useCallback((): void => {
     setBoard(emptyBoard(appliedSideLength))
+    setConstraints([])
+    setActiveConstraintId(null)
+    setCurrentCells([])
+    setSelectionMode('none')
     setMessage('')
     setMessageType('')
   }, [appliedSideLength])
@@ -105,7 +282,7 @@ export default function Sudoku() {
     setMessageType('')
     setLoading(true)
     try {
-      const data = await validateSudoku(board, [appliedShape.rows, appliedShape.cols])
+      const data = await validateSudoku(board, buildSolveParams())
       setMessage(data.message)
       setMessageType(data.valid ? 'success' : 'error')
     } catch (err) {
@@ -114,14 +291,14 @@ export default function Sudoku() {
     } finally {
       setLoading(false)
     }
-  }, [board, appliedShape])
+  }, [board, buildSolveParams])
 
   const handleSolve = useCallback(async (): Promise<void> => {
     setMessage('')
     setMessageType('')
     setLoading(true)
     try {
-      const data = await solveSudoku(board, [appliedShape.rows, appliedShape.cols])
+      const data = await solveSudoku(board, buildSolveParams())
       setMessage(data.message)
       setMessageType(data.success ? 'success' : 'error')
       if (data.success && data.solution) {
@@ -133,7 +310,9 @@ export default function Sudoku() {
     } finally {
       setLoading(false)
     }
-  }, [board, appliedShape])
+  }, [board, buildSolveParams])
+
+  // ---- render ----
 
   return (
     <div className="app">
@@ -143,12 +322,46 @@ export default function Sudoku() {
       </header>
 
       <main className="app-main">
+        <ConstraintToolbar
+          selectionMode={selectionMode}
+          onSelectMode={(mode) => { setSelectionMode(mode); setCurrentCells([]) }}
+          diagonalsEnabled={diagonalsEnabled}
+          onToggleDiagonals={toggleDiagonals}
+          constraintCount={constraints.length}
+          onToggleSidebar={() => setShowSidebar(v => !v)}
+          disabled={loading}
+        />
+
+        {selectionMode !== 'none' && (
+          <div className="constraint-toolbar">
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted, #94a3b8)' }}>
+              {selectionMode === 'region'
+                ? '拖拽选择4-连通区域'
+                : '依次点击格子构建路径'}
+              {' · '}
+              已选 {currentCells.length} 格
+              {selectionMode === 'path' && currentCells.length > 0 && (
+                <button type="button" onClick={handlePathUndo} style={{ marginLeft: '0.5rem' }}>
+                  撤销一步
+                </button>
+              )}
+            </span>
+          </div>
+        )}
+
         <SudokuGrid
           board={board}
           onChange={setBoard}
           readOnly={false}
           blockRows={appliedShape.rows}
           blockCols={appliedShape.cols}
+          constraints={constraints}
+          activeConstraintId={activeConstraintId}
+          selectionMode={selectionMode}
+          currentCells={currentCells}
+          onCellMouseDown={handleCellMouseDown}
+          onCellMouseEnter={handleCellMouseEnter}
+          onCellMouseUp={handleCellMouseUp}
         />
 
         <div className="actions">
@@ -200,8 +413,8 @@ export default function Sudoku() {
                   id="shape-select"
                   value={selectedShape ? `${selectedShape.rows}x${selectedShape.cols}` : ''}
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                    const [r, c] = e.target.value.split('x').map(Number)
-                    setSelectedShape({ rows: r, cols: c })
+                    const [r, cCol] = e.target.value.split('x').map(Number)
+                    setSelectedShape({ rows: r, cols: cCol })
                   }}
                 >
                   {shapeOptions.map(opt => (
@@ -220,6 +433,18 @@ export default function Sudoku() {
               </div>
             </div>
           </div>
+        )}
+
+        {showSidebar && (
+          <ConstraintSidebar
+            constraints={constraints}
+            activeConstraintId={activeConstraintId}
+            onSelect={selectConstraint}
+            onUpdate={updateConstraint}
+            onDelete={deleteConstraint}
+            onRedraw={redrawConstraint}
+            onClose={() => setShowSidebar(false)}
+          />
         )}
       </main>
     </div>
