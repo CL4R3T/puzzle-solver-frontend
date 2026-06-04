@@ -113,7 +113,14 @@ export function SudokuGrid({
     )
     const lines: PathLine[] = []
 
-    for (const c of constraints) {
+    // render inactive constraints first, then active one on top
+    const sorted = [...constraints].sort((a, b) => {
+      if (a.id === activeConstraintId) return 1
+      if (b.id === activeConstraintId) return -1
+      return 0
+    })
+
+    for (const c of sorted) {
       const isActive = c.id === activeConstraintId
       const category = getCategoryForType(c.constraintType)
 
@@ -178,6 +185,13 @@ export function SudokuGrid({
         }
       }
     }
+
+    // active lines on top
+    lines.sort((a, b) => {
+      if (a.isActive) return 1
+      if (b.isActive) return -1
+      return 0
+    })
 
     return { overlays: result, pathLines: lines }
   }, [board.length, constraints, activeConstraintId, currentCells, selectionMode])

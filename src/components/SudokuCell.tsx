@@ -66,7 +66,7 @@ export function SudokuCell({
     >
       {showFill && <div className="cell-overlay" />}
       {showRegionPreview && <div className="cell-preview" />}
-      {overlay.pathIndex >= 0 && (
+      {overlay.pathIndex >= 0 && overlay.isSelected && (
         <span className="path-index">{overlay.pathIndex + 1}</span>
       )}
       <input

@@ -225,7 +225,7 @@
   position: absolute;
   inset: 0;
   background: var(--constraint-color);
-  opacity: 0.3;
+  opacity: 0.4;
   pointer-events: none;
   z-index: 0;
 }
@@ -235,7 +235,7 @@
 }
 
 .sudoku-cell-inner.constraint-selected .cell-overlay {
-  opacity: 0.5;
+  opacity: 0.55;
   box-shadow: inset 0 0 0 2px var(--accent);
 }
 
