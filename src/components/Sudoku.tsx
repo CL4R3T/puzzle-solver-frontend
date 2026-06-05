@@ -443,6 +443,7 @@ export default function Sudoku() {
                   readOnly={true}
                   blockRows={appliedShape.rows}
                   blockCols={appliedShape.cols}
+                  constraints={constraints}
                   solvedMask={board.map(row => row.map(v => v === 0))}
                 />
               </div>
