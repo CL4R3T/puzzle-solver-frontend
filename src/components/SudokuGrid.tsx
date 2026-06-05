@@ -284,12 +284,12 @@ export function SudokuGrid({
                 strokeLinejoin="round"
                 opacity={line.isPreview ? 0.7 : 0.85}
               />
-              {points.map((p, i) => (
+              {[points[0], points[points.length - 1]].map((p, i) => (
                 <circle
                   key={i}
                   cx={p.cx}
                   cy={p.cy}
-                  r={i === 0 ? 5 : i === points.length - 1 ? 4 : 3}
+                  r={i === 0 ? 5 : 4}
                   fill={line.color}
                   stroke={line.isActive ? '#fff' : 'rgba(255,255,255,0.5)'}
                   strokeWidth={1.5}
